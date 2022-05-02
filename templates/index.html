@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>phase_3_assignment</title>
+	<meta name="phase_3_assignment" content="phase_3_assignment">
+	<meta name="author" content="Yun">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0">
+</head>
+<body>
+    <div style="font-weight:700;margin:10px 0 15px 0;">發表一篇圖文</div>
+
+    <div>
+        <label for="textInput">文字內容</label>
+        <input type="text" name="textInput" id="textInput">
+        <br/>
+        <label for="imgUpload">圖片檔案</label>
+        <input type="file" name="imgUpload" id="imgUpload" accept="image/*">
+        <br/>
+        <button id="submit">送出</button>
+    </div>
+    <hr/>
+
+    <div class="content"></div>
+
+    <script>
+        const apiUrl = 'http://44.199.90.64/upload';
+        const cloudFront = 'http://d3knydgma6pz3s.cloudfront.net/'
+        const textInput = document.getElementById('textInput');
+        const imgUpload = document.getElementById('imgUpload');
+
+        // get file object
+        let imgFile;
+        imgUpload.addEventListener('change',()=>{
+            imgFile = imgUpload.files[0]
+        })
+
+        // post data to server
+        const submit = document.getElementById('submit')
+        submit.addEventListener('click',()=>{
+            let text = textInput.value
+            let data = new FormData()
+            data.append('imgFile', imgFile)
+            data.append('text', text)
+
+            fetch(apiUrl,{
+                method:'POST',
+                body:data
+            })
+            .then(response=>response.json())
+            .then((res)=>{
+                console.log("upload successed")
+
+                let time = res.result.time
+                let text = res.result.text
+                let imageName = res.result.image
+                let pTextNode = document.createTextNode(text+" --"+time)
+                let content = document.querySelector('.content')
+                let img = document.createElement('img')
+                let p = document.createElement('p')
+
+                img.setAttribute('src',cloudFront+imageName)
+                img.setAttribute('width', "350px")
+                content.appendChild(img)
+                p.appendChild(pTextNode)
+                content.append(p)
+
+            })
+            .catch(console.log("upload failed"))
+        })
+
+        // render page while onloading page
+        async function renderPage(apiUrl){
+            const response = await fetch(apiUrl,{
+                method:'GET'
+            })
+            return await response.json()
+        }
+
+        renderPage(apiUrl)
+        .then((data)=>{
+
+            for(let i=0; i <= 9; i++){
+
+                let pTextNode = document.createTextNode(data.result[i].text + " --" +data.result[i].time)
+                let content = document.querySelector('.content')
+                let img = document.createElement('img')
+                let p = document.createElement('p')
+                let hr = document.createElement('hr')
+                img.setAttribute('src', cloudFront+data.result[i].image)
+                img.setAttribute('width', "350px")
+                content.appendChild(img)
+                p.appendChild(pTextNode)
+                content.appendChild(p)
+                content.appendChild(hr)
+            }
+        })
+    </script>
+</body>
+</html>
